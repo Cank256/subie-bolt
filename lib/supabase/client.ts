@@ -6,7 +6,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 // During build/prerender time, use placeholder values to prevent build failures
 // At runtime, these will be properly validated
-const isStaticGeneration = typeof window === 'undefined' && (!supabaseUrl || !supabaseAnonKey)
+const isStaticGeneration = process.env.NODE_ENV === 'production' && typeof window === 'undefined'
 const defaultUrl = 'https://placeholder.supabase.co'
 const defaultKey = 'placeholder-key'
 
