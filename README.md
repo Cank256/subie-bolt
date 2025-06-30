@@ -31,7 +31,7 @@ A modern, comprehensive subscription management platform built with Next.js, Sup
 - **Charts**: Recharts for data visualization
 - **Authentication**: Supabase Auth with role-based access control
 - **Database**: PostgreSQL with Row Level Security (RLS)
-- **Deployment**: Vercel (recommended)
+- **Deployment**: Netlify (recommended)
 
 ## 📦 Installation
 
@@ -169,19 +169,32 @@ subie-bolt/
 
 ## 🚀 Deployment
 
-### Vercel (Recommended)
+### Netlify (Recommended)
 
-1. **Connect your repository to Vercel**
-2. **Set environment variables**:
+1. **Connect your repository to Netlify**
+   - Go to [Netlify](https://netlify.com) and sign in
+   - Click "New site from Git" and connect your repository
+   - Select the branch to deploy (usually `main`)
+
+2. **Configure build settings**:
+   - Build command: `npm run build`
+   - Publish directory: `.next`
+   - Node version: `18` (set in Environment variables)
+
+3. **Set environment variables**:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY`
-3. **Deploy**
+   - `NODE_VERSION=18`
+
+4. **Deploy**
+   - Netlify will automatically build and deploy your site
+   - Your site will be available at a generated URL
 
 ### Other Platforms
 
 The application can be deployed to any platform that supports Next.js:
-- Netlify
+- Vercel
 - Railway
 - DigitalOcean App Platform
 - AWS Amplify
@@ -282,6 +295,6 @@ If you encounter issues:
 
 ---
 
-**Built with ❤️ using Next.js and Supabase**
+**Built with ❤️ using Bolt.new, Next.js and Supabase**
 
 For more information about the admin dashboard implementation, see [ADMIN_SETUP.md](./ADMIN_SETUP.md).
