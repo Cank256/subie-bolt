@@ -6,16 +6,16 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 // During build/prerender time, use placeholder values to prevent build failures
 // At runtime, these will be properly validated
-const isStaticGeneration = process.env.NODE_ENV === 'production' && typeof window === 'undefined'
+const isStaticGeneration = typeof window === 'undefined' && (!supabaseUrl || !supabaseAnonKey)
 const defaultUrl = 'https://placeholder.supabase.co'
 const defaultKey = 'placeholder-key'
 
 // Always use placeholders during static generation if env vars are missing
-const finalUrl = supabaseUrl || (isStaticGeneration ? defaultUrl : supabaseUrl || '')
-const finalKey = supabaseAnonKey || (isStaticGeneration ? defaultKey : supabaseAnonKey || '')
+const finalUrl = isStaticGeneration ? (supabaseUrl || defaultUrl) : (supabaseUrl || '')
+const finalKey = isStaticGeneration ? (supabaseAnonKey || defaultKey) : (supabaseAnonKey || '')
 
-// Only validate environment variables in development or client-side
-const shouldValidate = process.env.NODE_ENV === 'development' || typeof window !== 'undefined'
+// Only validate environment variables in development AND when not in static generation
+const shouldValidate = process.env.NODE_ENV === 'development' && !isStaticGeneration
 
 if (shouldValidate && !supabaseUrl) {
   throw new Error('Missing env.NEXT_PUBLIC_SUPABASE_URL')
