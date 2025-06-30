@@ -23,6 +23,12 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // Only run on client side to avoid SSR issues
+    if (typeof window === 'undefined') {
+      setLoading(false)
+      return
+    }
+
     // Check for existing session in localStorage
     const storedSession = localStorage.getItem('subie_session')
     if (storedSession) {
@@ -41,13 +47,17 @@ export function useAuth() {
   const signIn = (sessionData: CustomSession) => {
     setSession(sessionData)
     setUser(sessionData.user)
-    localStorage.setItem('subie_session', JSON.stringify(sessionData))
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('subie_session', JSON.stringify(sessionData))
+    }
   }
 
   const signOut = () => {
     setSession(null)
     setUser(null)
-    localStorage.removeItem('subie_session')
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('subie_session')
+    }
   }
 
   const isAdmin = user?.role === 'admin'
