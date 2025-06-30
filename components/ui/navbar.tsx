@@ -4,13 +4,11 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Menu, X, CreditCard } from 'lucide-react';
+import { useAuthContext } from '@/components/providers/auth-provider';
 
-interface NavbarProps {
-  isAuthenticated?: boolean;
-}
-
-export function Navbar({ isAuthenticated = false }: NavbarProps) {
+export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { isAuthenticated, signOut } = useAuthContext();
 
   const unauthenticatedLinks = [
     { name: 'Home', href: '/' },
@@ -63,7 +61,7 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
                 <Link href="/profile">
                   <Button variant="ghost">Profile</Button>
                 </Link>
-                <Button variant="outline">Sign Out</Button>
+                <Button variant="outline" onClick={signOut}>Sign Out</Button>
               </>
             ) : (
               <>
@@ -113,7 +111,7 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
                         Profile
                       </Button>
                     </Link>
-                    <Button variant="outline" className="w-full">
+                    <Button variant="outline" className="w-full" onClick={signOut}>
                       Sign Out
                     </Button>
                   </>

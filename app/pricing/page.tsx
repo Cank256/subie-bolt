@@ -4,8 +4,10 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Navbar } from '@/components/ui/navbar';
-import { Footer } from '@/components/ui/footer';
+import dynamic from 'next/dynamic';
+
+const Navbar = dynamic(() => import('@/components/ui/navbar').then(mod => mod.Navbar), { ssr: false });
+const Footer = dynamic(() => import('@/components/ui/footer').then(mod => mod.Footer), { ssr: false });
 import Link from 'next/link';
 import { 
   Check, 
@@ -148,7 +150,7 @@ export default function PricingPage() {
           <div className="text-center mb-16">
             <h1 className="text-4xl font-bold text-gray-900 mb-4">Simple, Transparent Pricing</h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-              Choose the plan that's right for you. Start free and upgrade as you grow.
+              Choose the plan that&apos;s right for you. Start free and upgrade as you grow.
             </p>
             <div className="flex items-center justify-center space-x-4">
               <span className={`text-sm font-medium ${!isAnnual ? 'text-gray-900' : 'text-gray-500'}`}>

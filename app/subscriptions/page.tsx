@@ -43,7 +43,7 @@ export default function SubscriptionsPage() {
     return (
       <AuthGuard>
         <div className="min-h-screen bg-gray-50">
-          <Navbar isAuthenticated={true} />
+          <Navbar />
           <div className="pt-24 pb-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
               <div className="flex items-center justify-center h-64">
@@ -60,7 +60,7 @@ export default function SubscriptionsPage() {
     return (
       <AuthGuard>
         <div className="min-h-screen bg-gray-50">
-          <Navbar isAuthenticated={true} />
+          <Navbar />
           <div className="pt-24 pb-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -101,7 +101,7 @@ export default function SubscriptionsPage() {
   return (
     <AuthGuard>
       <div className="min-h-screen bg-gray-50">
-        <Navbar isAuthenticated={true} />
+        <Navbar />
         
         <div className="pt-24 pb-12 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">

@@ -28,7 +28,7 @@ export default function TermsPage() {
                 <FileText className="w-10 h-10 text-blue-600 mx-auto mb-3" />
                 <h3 className="font-semibold mb-2">Plain English Summary</h3>
                 <p className="text-gray-600 text-sm">
-                  We'll provide clear explanations alongside legal language
+                  We&apos;ll provide clear explanations alongside legal language
                 </p>
               </CardContent>
             </Card>
@@ -54,11 +54,11 @@ export default function TermsPage() {
                 <section>
                   <h2 className="text-2xl font-bold text-gray-900 mb-4">1. Acceptance of Terms</h2>
                   <p className="text-gray-700 mb-4">
-                    By accessing and using Subie ("the Service"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
+                    By accessing and using Subie (&quot;the Service&quot;), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
                   </p>
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <p className="text-blue-800 text-sm">
-                      <strong>In simple terms:</strong> By using Subie, you're agreeing to follow these rules. If you don't agree, please don't use our service.
+                      <strong>In simple terms:</strong> By using Subie, you&apos;re agreeing to follow these rules. If you don&apos;t agree, please don&apos;t use our service.
                     </p>
                   </div>
                 </section>
@@ -84,7 +84,7 @@ export default function TermsPage() {
                   </p>
                   <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
                     <p className="text-orange-800 text-sm">
-                      <strong>Important:</strong> Keep your account information up to date and secure. You're responsible for all activities under your account.
+                      <strong>Important:</strong> Keep your account information up to date and secure. You&apos;re responsible for all activities under your account.
                     </p>
                   </div>
                 </section>
@@ -115,7 +115,7 @@ export default function TermsPage() {
                   </ul>
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                     <p className="text-green-800 text-sm">
-                      <strong>Good to know:</strong> You can cancel your subscription at any time. You'll retain access until the end of your billing period.
+                      <strong>Good to know:</strong> You can cancel your subscription at any time. You&apos;ll retain access until the end of your billing period.
                     </p>
                   </div>
                 </section>
@@ -141,7 +141,7 @@ export default function TermsPage() {
                   </p>
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                     <p className="text-yellow-800 text-sm">
-                      <strong>What this means:</strong> While we strive to provide excellent service, we can't be held responsible for indirect damages or losses beyond our control.
+                      <strong>What this means:</strong> While we strive to provide excellent service, we can&apos;t be held responsible for indirect damages or losses beyond our control.
                     </p>
                   </div>
                 </section>
