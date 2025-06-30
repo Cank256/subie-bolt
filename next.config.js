@@ -35,7 +35,13 @@ const nextConfig = {
   ],
   experimental: {
     esmExternals: 'loose'
-  }
+  },
+  // Disable static generation for pages that use client-side features
+  generateStaticParams: false,
+  // Skip static optimization for pages with dynamic content
+  skipTrailingSlashRedirect: true,
+  // Ensure proper handling of client components during build
+  swcMinify: true
 };
 
 module.exports = nextConfig;

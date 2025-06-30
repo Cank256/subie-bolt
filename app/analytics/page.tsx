@@ -236,7 +236,7 @@ export default function AnalyticsPage() {
                   <div className="p-4 bg-purple-50 rounded-lg">
                     <h4 className="font-medium text-purple-900 mb-2">Usage Review</h4>
                     <p className="text-purple-800 text-sm">
-                      You haven't used Netflix in 2 weeks. Consider pausing or canceling to save $15.99/month.
+                      You haven&apos;t used Netflix in 2 weeks. Consider pausing or canceling to save $15.99/month.
                     </p>
                   </div>
                 </CardContent>
