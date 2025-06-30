@@ -7,6 +7,8 @@ interface CustomUser {
     first_name?: string
     last_name?: string
   }
+  avatar_url?: string
+  role: 'user' | 'admin' | 'moderator'
 }
 
 interface CustomSession {
@@ -48,6 +50,10 @@ export function useAuth() {
     localStorage.removeItem('subie_session')
   }
 
+  const isAdmin = user?.role === 'admin'
+  const isModerator = user?.role === 'moderator'
+  const hasAdminAccess = isAdmin || isModerator
+
   return {
     user,
     session,
@@ -55,5 +61,8 @@ export function useAuth() {
     isAuthenticated: !!user,
     signIn,
     signOut,
+    isAdmin,
+    isModerator,
+    hasAdminAccess
   }
 }

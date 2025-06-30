@@ -64,7 +64,7 @@ export const auth = {
     // First, find the user in our users table using service role key
     const { data: users, error: userError } = await supabaseAuth
       .from('users')
-      .select('id, email, password_hash, first_name, last_name')
+      .select('id, email, password_hash, first_name, last_name, role')
       .eq('email', email)
       .limit(1)
 
@@ -90,10 +90,9 @@ export const auth = {
       user: {
         id: user.id,
         email: user.email,
-        user_metadata: {
-          first_name: user.first_name,
-          last_name: user.last_name
-        }
+        first_name: user.first_name,
+        last_name: user.last_name,
+        role: user.role || 'user'
       },
       access_token: 'custom_token_' + user.id,
       refresh_token: 'refresh_' + user.id

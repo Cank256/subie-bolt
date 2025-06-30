@@ -17,6 +17,7 @@ export type Database = {
           whatsapp_credits: number
           timezone: string
           currency: string
+          role: 'user' | 'admin' | 'moderator'
           created_at: string
           updated_at: string
         }
@@ -35,6 +36,7 @@ export type Database = {
           whatsapp_credits?: number
           timezone?: string
           currency?: string
+          role?: 'user' | 'admin' | 'moderator'
           created_at?: string
           updated_at?: string
         }
@@ -53,6 +55,7 @@ export type Database = {
           whatsapp_credits?: number
           timezone?: string
           currency?: string
+          role?: 'user' | 'admin' | 'moderator'
           created_at?: string
           updated_at?: string
         }
