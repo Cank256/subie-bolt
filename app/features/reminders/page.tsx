@@ -86,14 +86,14 @@ export default function RemindersPage() {
               <div className="border-l-4 border-green-500 pl-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Budget Notifications</h3>
                 <p className="text-gray-600">
-                  Receive alerts when you're approaching your monthly subscription budget limits.
+                  Receive alerts when you&apos;re approaching your monthly subscription budget limits.
                 </p>
               </div>
               
               <div className="border-l-4 border-orange-500 pl-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Unused Service Alerts</h3>
                 <p className="text-gray-600">
-                  Get reminded about subscriptions you haven't used recently, helping you identify potential savings.
+                  Get reminded about subscriptions you haven&apos;t used recently, helping you identify potential savings.
                 </p>
               </div>
             </div>

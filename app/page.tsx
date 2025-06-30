@@ -30,7 +30,7 @@ export default function Home() {
               Subscriptions
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-10 leading-relaxed">
-              Never miss a payment, track spending patterns, and optimize your subscription portfolio with Subie's intelligent management platform.
+              Never miss a payment, track spending patterns, and optimize your subscription portfolio with Subie&apos;s intelligent management platform.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link href="/signup">
@@ -226,7 +226,7 @@ export default function Home() {
                   ))}
                 </div>
                 <p className="text-gray-600 mb-4">
-                  "Subie helped me discover I was paying for 3 streaming services I forgot about. Saved me $45/month!"
+                  &quot;Subie helped me discover I was paying for 3 streaming services I forgot about. Saved me $45/month!&quot;
                 </p>
                 <div className="flex items-center">
                   <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mr-3">
@@ -248,7 +248,7 @@ export default function Home() {
                   ))}
                 </div>
                 <p className="text-gray-600 mb-4">
-                  "The analytics dashboard is incredible. I can see exactly where my money goes each month."
+                  &quot;The analytics dashboard is incredible. I can see exactly where my money goes each month.&quot;
                 </p>
                 <div className="flex items-center">
                   <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
@@ -270,7 +270,7 @@ export default function Home() {
                   ))}
                 </div>
                 <p className="text-gray-600 mb-4">
-                  "Never miss a payment again! The reminder system is a game-changer for busy professionals."
+                  &quot;Never miss a payment again! The reminder system is a game-changer for busy professionals.&quot;
                 </p>
                 <div className="flex items-center">
                   <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center mr-3">

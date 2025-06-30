@@ -74,7 +74,7 @@ export default function MobilePage() {
               Download Coming Soon
             </h3>
             <p className="text-gray-600 mb-6">
-              Our mobile app is currently in development. Sign up to be notified when it's available.
+              Our mobile app is currently in development. Sign up to be notified when it&apos;s available.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button className="bg-gray-800 text-white px-6 py-3 rounded-lg font-medium opacity-50 cursor-not-allowed">
