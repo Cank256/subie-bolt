@@ -227,7 +227,7 @@ export default function ProfilePage() {
                       Change Password
                     </Button>
                     <Button variant="outline" className="w-full justify-start">
-                      Enable Two-Factor Authentication
+                      Enable 2F Authentication
                     </Button>
                     <Button variant="outline" className="w-full justify-start">
                       Download Your Data
