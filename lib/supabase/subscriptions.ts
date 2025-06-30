@@ -164,8 +164,8 @@ export const subscriptions = {
 
     // Group by category
     const categorySpending = data.reduce((acc, sub) => {
-      const categoryName = sub.subscription_categories?.name || 'Other'
-      const categoryColor = sub.subscription_categories?.color || '#6B7280'
+      const categoryName = (sub.subscription_categories as any)?.name || 'Other'
+      const categoryColor = (sub.subscription_categories as any)?.color || '#6B7280'
       
       let monthlyAmount = sub.amount
       switch (sub.billing_cycle) {
