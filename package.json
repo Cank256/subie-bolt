@@ -11,7 +11,9 @@
     "seed": "node scripts/seed.js",
     "seed-users": "node scripts/seed-users.js",
     "diagnose": "node scripts/diagnose-connection.js",
-    "simple-seed": "node scripts/simple-seed.js"
+    "simple-seed": "node scripts/simple-seed.js",
+    "add-role-column": "node scripts/add-role-column-manual.js",
+    "health-check": "node scripts/health-check.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",

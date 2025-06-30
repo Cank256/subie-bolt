@@ -46,13 +46,24 @@ if (!isStaticGeneration && !finalUrl.includes('placeholder')) {
   }
 }
 
-export const supabase = createClient<Database>(cleanUrl, finalKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true
+// Singleton pattern to prevent multiple client instances
+let supabaseInstance: ReturnType<typeof createClient<Database>> | null = null
+
+export const getSupabaseClient = () => {
+  if (!supabaseInstance) {
+    supabaseInstance = createClient<Database>(cleanUrl, finalKey, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true
+      }
+    })
   }
-})
+  return supabaseInstance
+}
+
+// Export the singleton instance
+export const supabase = getSupabaseClient()
 
 // Runtime validation function for client-side usage
 export const validateSupabaseConfig = () => {
