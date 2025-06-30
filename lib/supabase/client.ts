@@ -4,39 +4,64 @@ import { Database } from './types'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-if (!supabaseUrl) {
+// During build time, use placeholder values to prevent build failures
+// At runtime, these will be properly validated
+const isBuildTime = process.env.NODE_ENV === 'production' && !supabaseUrl
+const defaultUrl = 'https://placeholder.supabase.co'
+const defaultKey = 'placeholder-key'
+
+const finalUrl = supabaseUrl || (isBuildTime ? defaultUrl : '')
+const finalKey = supabaseAnonKey || (isBuildTime ? defaultKey : '')
+
+if (!finalUrl && !isBuildTime) {
   throw new Error('Missing env.NEXT_PUBLIC_SUPABASE_URL')
 }
 
-if (!supabaseAnonKey) {
+if (!finalKey && !isBuildTime) {
   throw new Error('Missing env.NEXT_PUBLIC_SUPABASE_ANON_KEY')
 }
 
-// Check for placeholder values
-if (supabaseUrl.includes('placeholder') || supabaseUrl.includes('your_supabase')) {
+// Check for placeholder values (only warn at runtime, not during build)
+if (!isBuildTime && finalUrl.includes('placeholder') || finalUrl.includes('your_supabase')) {
   console.warn('⚠️  Supabase URL appears to be a placeholder. Please update NEXT_PUBLIC_SUPABASE_URL in your .env file with your actual Supabase project URL.')
 }
 
-if (supabaseAnonKey.includes('placeholder') || supabaseAnonKey.includes('your_supabase')) {
+if (!isBuildTime && finalKey.includes('placeholder') || finalKey.includes('your_supabase')) {
   console.warn('⚠️  Supabase anon key appears to be a placeholder. Please update NEXT_PUBLIC_SUPABASE_ANON_KEY in your .env file with your actual Supabase anon key.')
 }
 
-// Validate URL format only if it's not a placeholder
-let cleanUrl = supabaseUrl
-if (!supabaseUrl.includes('placeholder')) {
+// Validate URL format only if it's not a placeholder and not build time
+let cleanUrl = finalUrl
+if (!isBuildTime && !finalUrl.includes('placeholder')) {
   try {
-    new URL(supabaseUrl)
+    new URL(finalUrl)
     // Ensure URL doesn't have trailing slash
-    cleanUrl = supabaseUrl.replace(/\/$/, '')
+    cleanUrl = finalUrl.replace(/\/$/, '')
   } catch (error) {
-    throw new Error(`Invalid NEXT_PUBLIC_SUPABASE_URL: ${supabaseUrl}`)
+    throw new Error(`Invalid NEXT_PUBLIC_SUPABASE_URL: ${finalUrl}`)
   }
 }
 
-export const supabase = createClient<Database>(cleanUrl, supabaseAnonKey, {
+export const supabase = createClient<Database>(cleanUrl, finalKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true
   }
 })
+
+// Runtime validation function for client-side usage
+export const validateSupabaseConfig = () => {
+  if (typeof window !== 'undefined') {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    
+    if (!url || url.includes('placeholder')) {
+      throw new Error('Supabase URL is not configured. Please set NEXT_PUBLIC_SUPABASE_URL in your environment variables.')
+    }
+    
+    if (!key || key.includes('placeholder')) {
+      throw new Error('Supabase anon key is not configured. Please set NEXT_PUBLIC_SUPABASE_ANON_KEY in your environment variables.')
+    }
+  }
+}
