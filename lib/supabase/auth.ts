@@ -1,8 +1,24 @@
 import { supabase } from './client'
 import { Database } from './types'
 import bcrypt from 'bcryptjs'
+import { createClient } from '@supabase/supabase-js'
 
 type User = Database['public']['Tables']['users']['Row']
+
+// Create a separate client with service role key for authentication
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  throw new Error('Missing Supabase environment variables')
+}
+
+const supabaseAuth = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false
+  }
+})
 
 export const auth = {
   // Sign up with email and password
@@ -45,8 +61,8 @@ export const auth = {
 
   // Sign in with email and password (custom implementation)
   async signIn(email: string, password: string) {
-    // First, find the user in our users table
-    const { data: users, error: userError } = await supabase
+    // First, find the user in our users table using service role key
+    const { data: users, error: userError } = await supabaseAuth
       .from('users')
       .select('id, email, password_hash, first_name, last_name')
       .eq('email', email)
