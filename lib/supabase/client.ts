@@ -6,18 +6,19 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 // During build time, use placeholder values to prevent build failures
 // At runtime, these will be properly validated
-const isBuildTime = process.env.NODE_ENV === 'production' && !supabaseUrl
+const isBuildTime = typeof window === 'undefined' && (!supabaseUrl || !supabaseAnonKey)
 const defaultUrl = 'https://placeholder.supabase.co'
 const defaultKey = 'placeholder-key'
 
 const finalUrl = supabaseUrl || (isBuildTime ? defaultUrl : '')
 const finalKey = supabaseAnonKey || (isBuildTime ? defaultKey : '')
 
-if (!finalUrl && !isBuildTime) {
+// Only throw errors if we're not in build time and values are missing
+if (!isBuildTime && !finalUrl) {
   throw new Error('Missing env.NEXT_PUBLIC_SUPABASE_URL')
 }
 
-if (!finalKey && !isBuildTime) {
+if (!isBuildTime && !finalKey) {
   throw new Error('Missing env.NEXT_PUBLIC_SUPABASE_ANON_KEY')
 }
 
