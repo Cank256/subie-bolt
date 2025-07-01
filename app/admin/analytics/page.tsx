@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { AdminGuard } from '@/components/ui/admin-guard'
+import { AdminLayout } from '@/components/ui/admin-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -23,12 +24,12 @@ import {
   AreaChart
 } from 'recharts'
 import { 
+  BarChart3,
   TrendingUp, 
   Users, 
   CreditCard, 
   DollarSign, 
   Calendar, 
-  ArrowLeft,
   Download,
   RefreshCw
 } from 'lucide-react'
@@ -77,7 +78,7 @@ export default function AdminAnalyticsPage() {
         .from('subscriptions')
         .select(`
           *,
-          subscription_categories(category)
+          subscription_categories(name)
         `)
       
       if (users && subscriptions) {
@@ -158,7 +159,7 @@ export default function AdminAnalyticsPage() {
     const categoryData: { [key: string]: { count: number; revenue: number } } = {}
     
     subscriptions.forEach(sub => {
-      const category = sub.subscription_categories?.category || 'Unknown'
+      const category = sub.subscription_categories?.name || 'Unknown'
       if (!categoryData[category]) {
         categoryData[category] = { count: 0, revenue: 0 }
       }
@@ -234,26 +235,21 @@ export default function AdminAnalyticsPage() {
 
   return (
     <AdminGuard requireAdmin={true}>
-      <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <div className="bg-white shadow-sm border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-6">
-              <div className="flex items-center space-x-4">
-                <Link href="/admin">
-                  <Button variant="outline" size="sm">
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back to Dashboard
-                  </Button>
-                </Link>
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900">Analytics</h1>
-                  <p className="text-gray-600 mt-1">System insights and performance metrics</p>
-                </div>
+      <AdminLayout>
+        <div className="p-6">
+          {/* Header */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 flex items-center">
+                  <BarChart3 className="w-8 h-8 mr-3 text-purple-600" />
+                  Analytics Dashboard
+                </h1>
+                <p className="text-gray-600 mt-1">Comprehensive analytics and insights</p>
               </div>
-              <div className="flex space-x-3">
+              <div className="flex items-center space-x-3">
                 <Select value={timeRange} onValueChange={setTimeRange}>
-                  <SelectTrigger className="w-32">
+                  <SelectTrigger className="w-40">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -274,9 +270,6 @@ export default function AdminAnalyticsPage() {
               </div>
             </div>
           </div>
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Key Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <Card>
@@ -447,7 +440,7 @@ export default function AdminAnalyticsPage() {
             </Card>
           </div>
         </div>
-      </div>
+      </AdminLayout>
     </AdminGuard>
   )
 }

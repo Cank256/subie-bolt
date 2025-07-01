@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { AdminGuard } from '@/components/ui/admin-guard'
+import { AdminLayout } from '@/components/ui/admin-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -106,34 +107,24 @@ export default function AdminUsersPage() {
 
   return (
     <AdminGuard requireAdmin={true}>
-      <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <div className="bg-white shadow-sm border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-6">
-              <div className="flex items-center space-x-4">
-                <Link href="/admin">
-                  <Button variant="outline" size="sm">
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back to Dashboard
-                  </Button>
-                </Link>
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
-                  <p className="text-gray-600 mt-1">Manage user accounts and permissions</p>
-                </div>
+      <AdminLayout>
+        <div className="p-6">
+          {/* Header */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 flex items-center">
+                  <Users className="w-8 h-8 mr-3 text-purple-600" />
+                  User Management
+                </h1>
+                <p className="text-gray-600 mt-1">Manage user accounts and permissions</p>
               </div>
-              <div className="flex space-x-3">
-                <Button>
-                  <UserPlus className="w-4 h-4 mr-2" />
-                  Add User
-                </Button>
-              </div>
+              <Button>
+                <UserPlus className="w-4 h-4 mr-2" />
+                Add User
+              </Button>
             </div>
           </div>
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Filters */}
           <Card className="mb-6">
             <CardHeader>
@@ -294,7 +285,7 @@ export default function AdminUsersPage() {
             </CardContent>
           </Card>
         </div>
-      </div>
+      </AdminLayout>
     </AdminGuard>
   )
 }

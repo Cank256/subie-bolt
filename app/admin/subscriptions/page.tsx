@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { AdminGuard } from '@/components/ui/admin-guard'
+import { AdminLayout } from '@/components/ui/admin-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -48,7 +49,7 @@ export default function AdminSubscriptionsPage() {
         .select(`
           *,
           users!inner(email, first_name, last_name),
-          subscription_categories!inner(name, category)
+          subscription_categories!inner(name)
         `)
         .order('created_at', { ascending: false })
       
@@ -98,10 +99,10 @@ export default function AdminSubscriptionsPage() {
     const matchesSearch = 
       subscription.users?.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       subscription.subscription_categories?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      subscription.subscription_categories?.category.toLowerCase().includes(searchTerm.toLowerCase())
+      subscription.subscription_categories?.name.toLowerCase().includes(searchTerm.toLowerCase())
     
     const matchesStatus = statusFilter === 'all' || subscription.status === statusFilter
-    const matchesCategory = categoryFilter === 'all' || subscription.subscription_categories?.category === categoryFilter
+    const matchesCategory = categoryFilter === 'all' || subscription.subscription_categories?.name === categoryFilter
     
     return matchesSearch && matchesStatus && matchesCategory
   })
@@ -148,28 +149,24 @@ export default function AdminSubscriptionsPage() {
 
   return (
     <AdminGuard requireAdmin={true}>
-      <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <div className="bg-white shadow-sm border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-6">
-              <div className="flex items-center space-x-4">
-                <Link href="/admin">
-                  <Button variant="outline" size="sm">
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back to Dashboard
-                  </Button>
-                </Link>
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900">Subscription Management</h1>
-                  <p className="text-gray-600 mt-1">Monitor and manage user subscriptions</p>
-                </div>
+      <AdminLayout>
+        <div className="p-6">
+          {/* Header */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 flex items-center">
+                  <CreditCard className="w-8 h-8 mr-3 text-purple-600" />
+                  Subscription Management
+                </h1>
+                <p className="text-gray-600 mt-1">Monitor and manage all user subscriptions</p>
               </div>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Subscription
+              </Button>
             </div>
           </div>
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
             <Card>
@@ -331,7 +328,7 @@ export default function AdminSubscriptionsPage() {
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline">
-                            {subscription.subscription_categories?.category}
+                            {subscription.subscription_categories?.name}
                           </Badge>
                         </TableCell>
                         <TableCell className="font-medium">
@@ -389,7 +386,7 @@ export default function AdminSubscriptionsPage() {
             </CardContent>
           </Card>
         </div>
-      </div>
+      </AdminLayout>
     </AdminGuard>
   )
 }

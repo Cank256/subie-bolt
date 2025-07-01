@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import { AdminGuard } from '@/components/ui/admin-guard'
+import { AdminLayout } from '@/components/ui/admin-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Users, CreditCard, TrendingUp, Activity, Settings, Shield, BarChart3 } from 'lucide-react'
+import { Users, CreditCard, TrendingUp, Activity, Settings, Shield, BarChart3, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase/client'
 
@@ -118,31 +119,26 @@ export default function AdminDashboard() {
 
   return (
     <AdminGuard requireAdmin={true}>
-      <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <div className="bg-white shadow-sm border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-6">
+      <AdminLayout>
+        <div className="p-6">
+          {/* Header */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
                 <p className="text-gray-600 mt-1">Manage your Subie platform</p>
               </div>
               <div className="flex space-x-3">
+                <Button onClick={fetchAdminStats} variant="outline">
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Refresh
+                </Button>
                 <Link href="/subscriptions">
                   <Button variant="outline">View Site</Button>
-                </Link>
-                <Link href="/admin/settings">
-                  <Button>
-                    <Settings className="w-4 h-4 mr-2" />
-                    Settings
-                  </Button>
                 </Link>
               </div>
             </div>
           </div>
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Quick Stats */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <Card>
@@ -335,7 +331,7 @@ export default function AdminDashboard() {
             </TabsContent>
           </Tabs>
         </div>
-      </div>
+      </AdminLayout>
     </AdminGuard>
   )
 }
