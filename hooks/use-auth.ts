@@ -1,76 +1,186 @@
 import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase/client'
+import { auth } from '@/lib/supabase/auth'
+import type { User, Session } from '@supabase/supabase-js'
+import type { Database } from '@/lib/supabase/types'
 
-interface CustomUser {
-  id: string
-  email: string
-  user_metadata?: {
-    first_name?: string
-    last_name?: string
-  }
-  avatar_url?: string
-  role: 'user' | 'admin' | 'moderator'
+type UserProfile = Database['public']['Tables']['users']['Row']
+
+interface AuthUser extends User {
+  profile?: UserProfile
 }
 
-interface CustomSession {
-  user: CustomUser
-  access_token: string
-  refresh_token: string
+interface AuthState {
+  user: AuthUser | null
+  session: Session | null
+  profile: UserProfile | null
+  loading: boolean
 }
 
 export function useAuth() {
-  const [user, setUser] = useState<CustomUser | null>(null)
-  const [session, setSession] = useState<CustomSession | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [authState, setAuthState] = useState<AuthState>({
+    user: null,
+    session: null,
+    profile: null,
+    loading: true
+  })
 
   useEffect(() => {
-    // Only run on client side to avoid SSR issues
-    if (typeof window === 'undefined') {
-      setLoading(false)
-      return
-    }
-
-    // Check for existing session in localStorage
-    const storedSession = localStorage.getItem('subie_session')
-    if (storedSession) {
+    // Get initial session
+    const getInitialSession = async () => {
       try {
-        const parsedSession = JSON.parse(storedSession)
-        setSession(parsedSession)
-        setUser(parsedSession.user)
+        const { data: { session } } = await supabase.auth.getSession()
+        await handleAuthChange(session)
       } catch (error) {
-        console.error('Error parsing stored session:', error)
-        localStorage.removeItem('subie_session')
+        console.error('Error getting initial session:', error)
+      } finally {
+        setAuthState(prev => ({ ...prev, loading: false }))
       }
     }
-    setLoading(false)
+
+    getInitialSession()
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        await handleAuthChange(session)
+        setAuthState(prev => ({ ...prev, loading: false }))
+      }
+    )
+
+    return () => subscription.unsubscribe()
   }, [])
 
-  const signIn = (sessionData: CustomSession) => {
-    setSession(sessionData)
-    setUser(sessionData.user)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('subie_session', JSON.stringify(sessionData))
+  const handleAuthChange = async (session: Session | null) => {
+    if (session?.user) {
+      try {
+        // Get user profile with role
+        const profile = await auth.getUserProfile(session.user.id)
+        const userWithProfile: AuthUser = {
+          ...session.user,
+          profile
+        }
+        
+        setAuthState({
+          user: userWithProfile,
+          session,
+          profile,
+          loading: false
+        })
+      } catch (error) {
+        console.error('Error fetching user profile:', error)
+        setAuthState({
+          user: session.user,
+          session,
+          profile: null,
+          loading: false
+        })
+      }
+    } else {
+      setAuthState({
+        user: null,
+        session: null,
+        profile: null,
+        loading: false
+      })
     }
   }
 
-  const signOut = () => {
-    setSession(null)
-    setUser(null)
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('subie_session')
+  const signIn = async (email: string, password: string) => {
+    setAuthState(prev => ({ ...prev, loading: true }))
+    try {
+      const result = await auth.signIn(email, password)
+      return result
+    } catch (error) {
+      setAuthState(prev => ({ ...prev, loading: false }))
+      throw error
     }
   }
 
-  const isAdmin = user?.role === 'admin'
-  const isModerator = user?.role === 'moderator'
+  const signUp = async (email: string, password: string, userData: { first_name?: string; last_name?: string }) => {
+    setAuthState(prev => ({ ...prev, loading: true }))
+    try {
+      const result = await auth.signUp(email, password, userData)
+      return result
+    } catch (error) {
+      setAuthState(prev => ({ ...prev, loading: false }))
+      throw error
+    }
+  }
+
+  const signOut = async () => {
+    setAuthState(prev => ({ ...prev, loading: true }))
+    try {
+      await auth.signOut()
+    } catch (error) {
+      console.error('Error signing out:', error)
+      setAuthState(prev => ({ ...prev, loading: false }))
+      throw error
+    }
+  }
+
+  const signInWithOAuth = async (provider: 'google' | 'apple' | 'facebook') => {
+    try {
+      return await auth.signInWithOAuth(provider)
+    } catch (error) {
+      console.error('OAuth sign in error:', error)
+      throw error
+    }
+  }
+
+  const resetPassword = async (email: string) => {
+    try {
+      await auth.resetPassword(email)
+    } catch (error) {
+      console.error('Password reset error:', error)
+      throw error
+    }
+  }
+
+  const updatePassword = async (password: string) => {
+    try {
+      await auth.updatePassword(password)
+    } catch (error) {
+      console.error('Password update error:', error)
+      throw error
+    }
+  }
+
+  const updateProfile = async (updates: Partial<UserProfile>) => {
+    if (!authState.user) throw new Error('No authenticated user')
+    
+    try {
+      const updatedProfile = await auth.updateUserProfile(authState.user.id, updates)
+      setAuthState(prev => ({
+        ...prev,
+        profile: updatedProfile,
+        user: prev.user ? { ...prev.user, profile: updatedProfile } : null
+      }))
+      return updatedProfile
+    } catch (error) {
+      console.error('Profile update error:', error)
+      throw error
+    }
+  }
+
+  const { user, session, profile, loading } = authState
+  const isAdmin = profile?.role === 'admin'
+  const isModerator = profile?.role === 'moderator'
   const hasAdminAccess = isAdmin || isModerator
 
   return {
     user,
     session,
+    profile,
     loading,
     isAuthenticated: !!user,
     signIn,
+    signUp,
     signOut,
+    signInWithOAuth,
+    resetPassword,
+    updatePassword,
+    updateProfile,
     isAdmin,
     isModerator,
     hasAdminAccess

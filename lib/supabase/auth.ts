@@ -1,108 +1,85 @@
 import { supabase } from './client'
 import { Database } from './types'
-import bcrypt from 'bcryptjs'
-import { createClient } from '@supabase/supabase-js'
 
 type User = Database['public']['Tables']['users']['Row']
-
-// Create a separate client with service role key for authentication
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-
-if (!supabaseUrl || !supabaseServiceKey) {
-  throw new Error('Missing Supabase environment variables')
+type AuthUser = {
+  id: string
+  email: string
+  user_metadata?: {
+    first_name?: string
+    last_name?: string
+  }
+  avatar_url?: string
+  role: 'user' | 'admin' | 'moderator'
 }
 
-const supabaseAuth = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  }
-})
+type AuthSession = {
+  user: AuthUser
+  access_token: string
+  refresh_token: string
+}
 
 export const auth = {
-  // Sign up with email and password
-  async signUp(email: string, password: string, userData?: {
-    firstName?: string
-    lastName?: string
-    phone?: string
-  }) {
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          first_name: userData?.firstName,
-          last_name: userData?.lastName,
-          phone: userData?.phone,
+  async signUp(email: string, password: string, userData: { first_name?: string; last_name?: string }) {
+    try {
+      // Create user in Supabase Auth with metadata
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            first_name: userData.first_name,
+            last_name: userData.last_name,
+          }
         }
-      }
-    })
-
-    if (authError) throw authError
-
-    // Create user profile
-    if (authData.user) {
-      const { error: profileError } = await supabase
-        .from('users')
-        .insert({
-          id: authData.user.id,
-          email: authData.user.email!,
-          first_name: userData?.firstName || null,
-          last_name: userData?.lastName || null,
-          phone: userData?.phone || null,
+      })
+      
+      if (error) throw error
+      if (!data.user) throw new Error('Failed to create user')
+      
+      // The user record will be created automatically via database trigger
+      // or we can create it here if needed
+      if (data.user.email_confirmed_at) {
+        await this.createUserProfile(data.user.id, {
+          email: data.user.email!,
+          first_name: userData.first_name,
+          last_name: userData.last_name,
         })
-
-      if (profileError) throw profileError
+      }
+      
+      return { user: data.user, session: data.session }
+    } catch (error) {
+      console.error('Sign up error:', error)
+      throw error
     }
-
-    return authData
   },
 
-  // Sign in with email and password (custom implementation)
   async signIn(email: string, password: string) {
-    // First, find the user in our users table using service role key
-    const { data: users, error: userError } = await supabaseAuth
-      .from('users')
-      .select('id, email, password_hash, first_name, last_name, role')
-      .eq('email', email)
-      .limit(1)
-
-    if (userError || !users || users.length === 0) {
-      throw new Error('Invalid login credentials')
+    try {
+      // Sign in with Supabase Auth
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+      
+      if (error) throw error
+      if (!data.user || !data.session) throw new Error('Failed to sign in')
+      
+      // Get user profile with role
+      const userProfile = await this.getUserProfile(data.user.id)
+      
+      return {
+        user: data.user,
+        session: data.session,
+        profile: userProfile
+      }
+    } catch (error) {
+      console.error('Sign in error:', error)
+      throw error
     }
-
-    const user = users[0]
-
-    // Check if user has a password hash
-    if (!user.password_hash) {
-      throw new Error('Invalid login credentials')
-    }
-
-    // Verify password
-    const isValidPassword = await bcrypt.compare(password, user.password_hash)
-    if (!isValidPassword) {
-      throw new Error('Invalid login credentials')
-    }
-
-    // Create a session token (simplified - in production you'd want JWT)
-    const sessionData = {
-      user: {
-        id: user.id,
-        email: user.email,
-        first_name: user.first_name,
-        last_name: user.last_name,
-        role: user.role || 'user'
-      },
-      access_token: 'custom_token_' + user.id,
-      refresh_token: 'refresh_' + user.id
-    }
-
-    return { user: sessionData.user, session: sessionData }
   },
 
-  // Sign in with OAuth providers
-  async signInWithProvider(provider: 'google' | 'facebook' | 'apple') {
+  async signInWithOAuth(provider: 'google' | 'apple' | 'facebook') {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
@@ -114,40 +91,79 @@ export const auth = {
     return data
   },
 
-  // Sign out
   async signOut() {
     const { error } = await supabase.auth.signOut()
     if (error) throw error
   },
 
-  // Get current user
-  async getCurrentUser() {
-    const { data: { user } } = await supabase.auth.getUser()
-    return user
-  },
-
-  // Get current session
-  async getCurrentSession() {
-    const { data: { session } } = await supabase.auth.getSession()
+  async getSession() {
+    const { data: { session }, error } = await supabase.auth.getSession()
+    if (error) throw error
     return session
   },
 
-  // Reset password
+  async getUser() {
+    const { data: { user }, error } = await supabase.auth.getUser()
+    if (error) throw error
+    return user
+  },
+
   async resetPassword(email: string) {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth/reset-password`
     })
-
     if (error) throw error
   },
 
-  // Update password
   async updatePassword(password: string) {
     const { error } = await supabase.auth.updateUser({ password })
     if (error) throw error
   },
 
-  // Listen to auth changes
+  async createUserProfile(userId: string, profileData: {
+    email: string
+    first_name?: string
+    last_name?: string
+  }) {
+    const { data, error } = await supabase
+      .from('users')
+      .insert({
+        id: userId,
+        email: profileData.email,
+        first_name: profileData.first_name,
+        last_name: profileData.last_name,
+        role: 'user'
+      })
+      .select()
+      .single()
+    
+    if (error) throw error
+    return data
+  },
+
+  async getUserProfile(userId: string) {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', userId)
+      .single()
+    
+    if (error) throw error
+    return data
+  },
+
+  async updateUserProfile(userId: string, updates: Partial<User>) {
+    const { data, error } = await supabase
+      .from('users')
+      .update(updates)
+      .eq('id', userId)
+      .select()
+      .single()
+    
+    if (error) throw error
+    return data
+  },
+
   onAuthStateChange(callback: (event: string, session: any) => void) {
     return supabase.auth.onAuthStateChange(callback)
   }

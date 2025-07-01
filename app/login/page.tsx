@@ -26,11 +26,15 @@ export default function LoginPage() {
   });
 
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, signIn, signInWithOAuth, isAdmin, hasAdminAccess } = useAuth();
 
   // Redirect if already authenticated
   if (user) {
-    router.push('/subscriptions');
+    if (hasAdminAccess) {
+      router.push('/admin');
+    } else {
+      router.push('/subscriptions');
+    }
     return null;
   }
 
@@ -55,11 +59,8 @@ export default function LoginPage() {
 
     try {
       if (loginMethod === 'email') {
-        const result = await auth.signIn(formData.email, formData.password);
-        // Store session in localStorage and update auth state
-        localStorage.setItem('subie_session', JSON.stringify(result.session));
-        // Force a page reload to update auth state
-        window.location.href = '/subscriptions';
+        await signIn(formData.email, formData.password);
+        // Redirect will be handled by the useAuth hook and useEffect above
       } else {
         // For phone login, you'd need to implement SMS OTP
         setError('Phone login not implemented yet. Please use email.');
@@ -75,7 +76,8 @@ export default function LoginPage() {
   const handleOAuthLogin = async (provider: 'google' | 'facebook' | 'apple') => {
     try {
       setLoading(true);
-      await auth.signInWithProvider(provider);
+      await signInWithOAuth(provider);
+      // Redirect will be handled by OAuth callback
     } catch (err) {
       setError(err instanceof Error ? err.message : 'OAuth login failed');
       setLoading(false);

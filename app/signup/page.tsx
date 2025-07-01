@@ -11,7 +11,6 @@ import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Navbar } from '@/components/ui/navbar';
 import { PhoneInput } from '@/components/ui/phone-input';
-import { auth } from '@/lib/supabase/auth';
 import { useAuth } from '@/hooks/use-auth';
 import { Mail, Smartphone, Facebook, Chrome, Apple, ArrowLeft, Eye, EyeOff, CheckCircle } from 'lucide-react';
 
@@ -30,7 +29,7 @@ export default function SignupPage() {
   });
 
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, signUp, signInWithOAuth } = useAuth();
 
   // Redirect if already authenticated
   if (user) {
@@ -64,9 +63,9 @@ export default function SignupPage() {
 
     try {
       if (loginMethod === 'email') {
-        await auth.signUp(formData.email, formData.password, {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
+        await signUp(formData.email, formData.password, {
+          first_name: formData.firstName,
+          last_name: formData.lastName,
           phone: formData.phone || undefined,
         });
         
@@ -85,7 +84,8 @@ export default function SignupPage() {
   const handleOAuthSignup = async (provider: 'google' | 'facebook' | 'apple') => {
     try {
       setLoading(true);
-      await auth.signInWithProvider(provider);
+      await signInWithOAuth(provider);
+      // Redirect will be handled by the auth callback
     } catch (err) {
       setError(err instanceof Error ? err.message : 'OAuth signup failed');
       setLoading(false);

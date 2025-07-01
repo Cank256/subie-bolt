@@ -35,13 +35,55 @@ export default function AdminDashboard() {
   const fetchAdminStats = async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase.rpc('get_admin_stats')
       
-      if (error) {
-        throw error
+      // Try the RPC function first, fallback to manual queries if it fails
+      const { data: rpcData, error: rpcError } = await supabase.rpc('get_admin_stats')
+      
+      if (!rpcError && rpcData) {
+        setStats(rpcData)
+        return
       }
       
-      setStats(data)
+      console.log('RPC function not available, fetching stats manually...')
+      
+      // Fallback: Fetch stats manually
+      const [usersResult, subscriptionsResult, transactionsResult] = await Promise.all([
+        supabase.from('users').select('id, created_at', { count: 'exact' }),
+        supabase.from('subscriptions').select('id, status', { count: 'exact' }),
+        supabase.from('transactions').select('amount, status, created_at', { count: 'exact' })
+      ])
+      
+      // Calculate stats manually
+      const totalUsers = usersResult.count || 0
+      const activeUsers = usersResult.data?.filter(user => 
+        new Date(user.created_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+      ).length || 0
+      
+      const totalSubscriptions = subscriptionsResult.count || 0
+      const activeSubscriptions = subscriptionsResult.data?.filter(sub => sub.status === 'active').length || 0
+      
+      const completedTransactions = transactionsResult.data?.filter(tx => tx.status === 'completed') || []
+      const totalRevenue = completedTransactions.reduce((sum, tx) => sum + (tx.amount || 0), 0)
+      
+      const currentMonth = new Date()
+      currentMonth.setDate(1)
+      currentMonth.setHours(0, 0, 0, 0)
+      const monthlyRevenue = completedTransactions
+        .filter(tx => tx.created_at && new Date(tx.created_at) >= currentMonth)
+        .reduce((sum, tx) => sum + (tx.amount || 0), 0)
+      
+      const manualStats: AdminStats = {
+        total_users: totalUsers,
+        active_users: activeUsers,
+        total_subscriptions: totalSubscriptions,
+        active_subscriptions: activeSubscriptions,
+        total_revenue: totalRevenue,
+        monthly_revenue: monthlyRevenue,
+        subscription_categories: [] // Will be empty for now
+      }
+      
+      setStats(manualStats)
+      
     } catch (err) {
       console.error('Error fetching admin stats:', err)
       setError(err instanceof Error ? err.message : 'Failed to fetch stats')

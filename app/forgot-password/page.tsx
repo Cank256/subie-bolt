@@ -7,16 +7,30 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Navbar } from '@/components/ui/navbar';
+import { useAuth } from '@/hooks/use-auth';
 import { ArrowLeft, Mail, CheckCircle } from 'lucide-react';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  
+  const { resetPassword } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle password reset logic here
-    setIsSubmitted(true);
+    setLoading(true);
+    setError(null);
+    
+    try {
+      await resetPassword(email);
+      setIsSubmitted(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to send reset email');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -54,6 +68,12 @@ export default function ForgotPasswordPage() {
               )}
             </CardHeader>
             <CardContent className="space-y-6">
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <p className="text-red-800 text-sm">{error}</p>
+                </div>
+              )}
+              
               {!isSubmitted ? (
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
@@ -72,9 +92,10 @@ export default function ForgotPasswordPage() {
                   <Button 
                     type="submit"
                     className="w-full h-11 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                    disabled={loading}
                   >
                     <Mail className="w-4 h-4 mr-2" />
-                    Send reset link
+                    {loading ? 'Sending reset link...' : 'Send reset link'}
                   </Button>
                 </form>
               ) : (
