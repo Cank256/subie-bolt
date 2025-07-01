@@ -19,6 +19,10 @@ type AuthSession = {
   refresh_token: string
 }
 
+// Simple in-memory cache for user profiles to reduce database calls
+const profileCache = new Map<string, { profile: User; timestamp: number }>()
+const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
+
 export const auth = {
   async signUp(email: string, password: string, userData: { first_name?: string; last_name?: string }) {
     try {
@@ -65,13 +69,11 @@ export const auth = {
       if (error) throw error
       if (!data.user || !data.session) throw new Error('Failed to sign in')
       
-      // Get user profile with role
-      const userProfile = await this.getUserProfile(data.user.id)
-      
+      // Return immediately without fetching profile - let useAuth handle it
+      // This reduces the initial sign-in time and prevents duplicate profile fetches
       return {
         user: data.user,
-        session: data.session,
-        profile: userProfile
+        session: data.session
       }
     } catch (error) {
       console.error('Sign in error:', error)
@@ -142,6 +144,12 @@ export const auth = {
   },
 
   async getUserProfile(userId: string) {
+    // Check cache first
+    const cached = profileCache.get(userId)
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      return cached.profile
+    }
+    
     const { data, error } = await supabase
       .from('users')
       .select('*')
@@ -149,6 +157,13 @@ export const auth = {
       .single()
     
     if (error) throw error
+    
+    // Cache the result
+    profileCache.set(userId, {
+      profile: data,
+      timestamp: Date.now()
+    })
+    
     return data
   },
 
@@ -161,6 +176,13 @@ export const auth = {
       .single()
     
     if (error) throw error
+    
+    // Update cache with new data
+    profileCache.set(userId, {
+      profile: data,
+      timestamp: Date.now()
+    })
+    
     return data
   },
 
