@@ -69,10 +69,32 @@ export function useAuth() {
         })
       } catch (error) {
         console.error('Error fetching user profile:', error)
+        
+        // Fallback: create a minimal profile from JWT user_metadata
+        const fallbackProfile: UserProfile | null = session.user.user_metadata ? {
+          id: session.user.id,
+          email: session.user.email || '',
+          phone: session.user.phone || null,
+          first_name: session.user.user_metadata.first_name || null,
+          last_name: session.user.user_metadata.last_name || null,
+          avatar_url: session.user.user_metadata.avatar_url || null,
+          email_verified: session.user.email_confirmed_at ? true : false,
+          phone_verified: session.user.phone_confirmed_at ? true : false,
+          subscription_plan: 'free' as const,
+          plan_expires_at: null,
+          sms_credits: 0,
+          whatsapp_credits: 0,
+          timezone: 'UTC',
+          currency: 'USD',
+          role: (session.user.user_metadata.role as 'user' | 'admin' | 'moderator') || 'user',
+          created_at: session.user.created_at,
+          updated_at: session.user.updated_at || session.user.created_at
+        } : null
+        
         setAuthState({
           user: session.user,
           session,
-          profile: null,
+          profile: fallbackProfile,
           loading: false
         })
       }

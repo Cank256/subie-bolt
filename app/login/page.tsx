@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,7 @@ import { Mail, Smartphone, Facebook, Chrome, Apple, ArrowLeft, Eye, EyeOff } fro
 export default function LoginPage() {
   const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('email');
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: '',
@@ -26,13 +26,44 @@ export default function LoginPage() {
   });
 
   const router = useRouter();
-  const { user, signIn, signInWithOAuth, isAdmin, hasAdminAccess } = useAuth();
+  const { user, signIn, signInWithOAuth, isAdmin, hasAdminAccess, loading: authLoading } = useAuth();
+
+  // Handle redirection after login
+  useEffect(() => {
+    if (user && !authLoading) {
+      // console.log('Login useEffect redirect check:', { 
+      //   user: user.email, 
+      //   hasAdminAccess, 
+      //   isAdmin, 
+      //   profileRole: user.profile?.role,
+      //   userMetadataRole: user.user_metadata?.role 
+      // });
+      
+      if (hasAdminAccess) {
+        // console.log('Redirecting to admin dashboard via useEffect');
+        router.push('/admin');
+      } else {
+        // console.log('Redirecting to subscriptions via useEffect');
+        router.push('/subscriptions');
+      }
+    }
+  }, [user, hasAdminAccess, authLoading, router, isAdmin]);
 
   // Redirect if already authenticated
-  if (user) {
+  if (user && !authLoading) {
+    // console.log('Login redirect check:', { 
+    //   user: user.email, 
+    //   hasAdminAccess, 
+    //   isAdmin, 
+    //   profileRole: user.profile?.role,
+    //   userMetadataRole: user.user_metadata?.role 
+    // });
+    
     if (hasAdminAccess) {
+      console.log('Redirecting to admin dashboard');
       router.push('/admin');
     } else {
+      console.log('Redirecting to subscriptions');
       router.push('/subscriptions');
     }
     return null;
@@ -54,14 +85,15 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setFormLoading(true);
     setError(null);
 
     try {
-      if (loginMethod === 'email') {
-        await signIn(formData.email, formData.password);
-        // Redirect will be handled by the useAuth hook and useEffect above
-      } else {
+        if (loginMethod === 'email') {
+          const result = await signIn(formData.email, formData.password);
+          console.log('Sign in result:', result);
+          // Redirect will be handled by the useEffect above
+        } else {
         // For phone login, you'd need to implement SMS OTP
         setError('Phone login not implemented yet. Please use email.');
         return;
@@ -69,18 +101,18 @@ export default function LoginPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
-      setLoading(false);
+      setFormLoading(false);
     }
   };
 
   const handleOAuthLogin = async (provider: 'google' | 'facebook' | 'apple') => {
     try {
-      setLoading(true);
+      setFormLoading(true);
       await signInWithOAuth(provider);
       // Redirect will be handled by OAuth callback
     } catch (err) {
       setError(err instanceof Error ? err.message : 'OAuth login failed');
-      setLoading(false);
+      setFormLoading(false);
     }
   };
 
@@ -117,7 +149,7 @@ export default function LoginPage() {
                   variant="outline" 
                   className="w-full justify-start"
                   onClick={() => handleOAuthLogin('google')}
-                  disabled={loading}
+                  disabled={formLoading}
                 >
                   <Chrome className="mr-2 h-4 w-4" />
                   Continue with Google
@@ -126,7 +158,7 @@ export default function LoginPage() {
                   variant="outline" 
                   className="w-full justify-start"
                   onClick={() => handleOAuthLogin('apple')}
-                  disabled={loading}
+                  disabled={formLoading}
                 >
                   <Apple className="mr-2 h-4 w-4" />
                   Continue with Apple
@@ -135,7 +167,7 @@ export default function LoginPage() {
                   variant="outline" 
                   className="w-full justify-start"
                   onClick={() => handleOAuthLogin('facebook')}
-                  disabled={loading}
+                  disabled={formLoading}
                 >
                   <Facebook className="mr-2 h-4 w-4" />
                   Continue with Facebook
@@ -240,9 +272,9 @@ export default function LoginPage() {
                 <Button 
                   type="submit"
                   className="w-full h-11 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-                  disabled={loading}
+                  disabled={formLoading}
                 >
-                  {loading ? 'Signing in...' : (loginMethod === 'email' ? 'Sign in with Email' : 'Send OTP')}
+                  {formLoading ? 'Signing in...' : (loginMethod === 'email' ? 'Sign in with Email' : 'Send OTP')}
                 </Button>
               </form>
 
