@@ -71,7 +71,7 @@ export default function AdminNotificationsPage() {
     title: '',
     message: '',
     type: 'info' as const,
-    target: 'all' as const,
+    target: 'all' as 'all' | 'admins' | 'users' | 'specific',
     target_users: '',
     channels: ['in_app'] as ('email' | 'in_app' | 'push')[],
     scheduled_for: ''
