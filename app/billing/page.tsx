@@ -1,58 +1,176 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Navbar } from '@/components/ui/navbar';
-import { Footer } from '@/components/ui/footer';
-import { AuthGuard } from '@/components/ui/auth-guard';
-import { 
-  CreditCard, 
-  Download, 
-  Calendar,
+import { Separator } from '@/components/ui/separator';
+import { useRevenueCat } from '@/hooks/use-revenuecat';
+import { useAuth } from '@/hooks/use-auth';
+import Link from 'next/link';
+import {
+  CreditCard,
   DollarSign,
   TrendingUp,
+  TrendingDown,
+  Calendar,
+  CheckCircle,
+  XCircle,
+  Crown,
+  Settings,
+  RefreshCw,
+  Download,
   AlertCircle,
-  CheckCircle
 } from 'lucide-react';
+import { AuthGuard } from '@/components/ui/auth-guard';
+import { Navbar } from '@/components/ui/navbar';
+import { Footer } from '@/components/ui/footer';
 
+// Mock data for demonstration
 const mockTransactions = [
   {
-    id: 1,
-    service: 'Netflix',
-    amount: 15.99,
-    date: '2025-01-15',
+    id: '1',
+    date: '2024-01-15',
+    description: 'Premium Subscription',
+    amount: 29.99,
     status: 'completed',
-    type: 'subscription'
+    method: 'Credit Card',
   },
   {
-    id: 2,
-    service: 'Spotify Premium',
-    amount: 9.99,
-    date: '2025-01-10',
+    id: '2',
+    date: '2024-01-01',
+    description: 'Standard Plan',
+    amount: 19.99,
     status: 'completed',
-    type: 'subscription'
+    method: 'PayPal',
   },
   {
-    id: 3,
-    service: 'Adobe Creative Suite',
-    amount: 52.99,
-    date: '2025-01-01',
-    status: 'completed',
-    type: 'subscription'
-  },
-  {
-    id: 4,
-    service: 'YouTube Premium',
-    amount: 11.99,
-    date: '2024-12-28',
+    id: '3',
+    date: '2023-12-15',
+    description: 'Premium Subscription',
+    amount: 29.99,
     status: 'failed',
-    type: 'subscription'
+    method: 'Credit Card',
+  },
+  {
+    id: '4',
+    date: '2023-12-01',
+    description: 'Standard Plan',
+    amount: 19.99,
+    status: 'completed',
+    method: 'Credit Card',
+  },
+];
+
+const mockPaymentMethods = [
+  {
+    id: '1',
+    type: 'Credit Card',
+    last4: '4242',
+    brand: 'Visa',
+    expiryMonth: 12,
+    expiryYear: 2025,
+    isDefault: true,
+  },
+  {
+    id: '2',
+    type: 'PayPal',
+    email: 'user@example.com',
+    isDefault: false,
   },
 ];
 
 export default function BillingPage() {
-  const totalThisMonth = mockTransactions
-    .filter(t => new Date(t.date).getMonth() === new Date().getMonth())
-    .reduce((sum, t) => sum + (t.status === 'completed' ? t.amount : 0), 0);
+  const { user } = useAuth();
+  const {
+    customerInfo,
+    isLoading,
+    error,
+    hasActiveSubscription,
+    subscriptionPlan,
+    restorePurchases,
+    getCustomerInfo,
+  } = useRevenueCat();
+  
+  const [isRestoring, setIsRestoring] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Handle restore purchases
+  const handleRestorePurchases = async () => {
+    setIsRestoring(true);
+    try {
+      await restorePurchases();
+    } catch (error) {
+      console.error('Failed to restore purchases:', error);
+    } finally {
+      setIsRestoring(false);
+    }
+  };
+
+  // Handle refresh subscription info
+  const handleRefreshSubscription = async () => {
+    setIsRefreshing(true);
+    try {
+      await getCustomerInfo();
+    } catch (error) {
+      console.error('Failed to refresh subscription:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  // Get subscription status display
+  const getSubscriptionStatus = () => {
+    if (!hasActiveSubscription) return 'Free Plan';
+    
+    switch (subscriptionPlan) {
+      case 'premium':
+        return 'Premium Plan';
+      case 'standard':
+        return 'Standard Plan';
+      default:
+        return 'Free Plan';
+    }
+  };
+
+  // Get next billing date
+  const getNextBillingDate = () => {
+    if (!customerInfo || !hasActiveSubscription) return null;
+    
+    // Get the latest expiration date from active entitlements
+    const activeEntitlements = Object.values(customerInfo.entitlements.active);
+    if (activeEntitlements.length === 0) return null;
+    
+    const latestExpiration = activeEntitlements.reduce((latest, entitlement) => {
+      if (!entitlement.expirationDate) return latest;
+      const expirationDate = new Date(entitlement.expirationDate);
+      return expirationDate > latest ? expirationDate : latest;
+    }, new Date(0));
+    
+    return latestExpiration.toLocaleDateString();
+  };
+
+  // Calculate stats from mock data
+  const monthlyTotal = mockTransactions
+    .filter(t => t.status === 'completed' && new Date(t.date).getMonth() === new Date().getMonth())
+    .reduce((sum, t) => sum + t.amount, 0);
+  
+  const successfulPayments = mockTransactions.filter(t => t.status === 'completed').length;
+  const failedPayments = mockTransactions.filter(t => t.status === 'failed').length;
+
+  if (!user) {
+    return (
+      <div className="container mx-auto py-8">
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-center text-muted-foreground">
+              Please sign in to view your billing information.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <AuthGuard>
@@ -63,9 +181,71 @@ export default function BillingPage() {
           <div className="max-w-7xl mx-auto">
             {/* Header */}
             <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-900">Billing & Payments</h1>
-              <p className="text-gray-600 mt-2">Manage your payment methods and view transaction history</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">Billing & Subscription</h1>
+                  <p className="text-gray-600 mt-2">Manage your subscription and view transaction history</p>
+                </div>
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    onClick={handleRefreshSubscription}
+                    disabled={isLoading}
+                  >
+                    <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleRestorePurchases}
+                    disabled={isLoading}
+                  >
+                    Restore Purchases
+                  </Button>
+                </div>
+              </div>
             </div>
+
+            {/* Current Subscription Status */}
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Crown className="w-5 h-5 mr-2" />
+                  Current Subscription
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
+                    <h3 className="font-semibold text-lg">{getSubscriptionStatus()}</h3>
+                    <p className="text-gray-600">
+                      {hasActiveSubscription ? 'Active subscription' : 'No active subscription'}
+                    </p>
+                  </div>
+                  
+                  {hasActiveSubscription && (
+                    <div>
+                      <h4 className="font-medium">Next Billing Date</h4>
+                      <p className="text-gray-600">{getNextBillingDate()}</p>
+                    </div>
+                  )}
+                  
+                  <div className="flex space-x-2">
+                    <Link href="/pricing">
+                      <Button variant="outline">
+                        {hasActiveSubscription ? 'Change Plan' : 'Upgrade Plan'}
+                      </Button>
+                    </Link>
+                    {hasActiveSubscription && (
+                      <Button variant="outline">
+                        <Settings className="w-4 h-4 mr-2" />
+                        Manage
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -75,7 +255,7 @@ export default function BillingPage() {
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">${totalThisMonth.toFixed(2)}</div>
+                  <div className="text-2xl font-bold">${monthlyTotal.toFixed(2)}</div>
                   <p className="text-xs text-muted-foreground">
                     +12% from last month
                   </p>
@@ -173,7 +353,7 @@ export default function BillingPage() {
                               <CreditCard className="w-5 h-5 text-purple-600" />
                             </div>
                             <div>
-                              <h4 className="font-medium">{transaction.service}</h4>
+                              <h4 className="font-medium">{transaction.description}</h4>
                               <p className="text-sm text-gray-600">
                                 {new Date(transaction.date).toLocaleDateString()}
                               </p>

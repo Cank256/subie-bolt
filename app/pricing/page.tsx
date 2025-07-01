@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import dynamic from 'next/dynamic';
+import { useRevenueCat } from '@/hooks/use-revenuecat';
+import { useAuth } from '@/hooks/use-auth';
+import { useRouter } from 'next/navigation';
 
 const Navbar = dynamic(() => import('@/components/ui/navbar').then(mod => mod.Navbar), { ssr: false });
 const Footer = dynamic(() => import('@/components/ui/footer').then(mod => mod.Footer), { ssr: false });
@@ -47,7 +50,8 @@ const plans = [
     ],
     cta: 'Get Started Free',
     popular: false,
-    icon: CreditCard
+    icon: CreditCard,
+    packageId: null // Free plan doesn't need RevenueCat package
   },
   {
     name: 'Standard',
@@ -68,7 +72,11 @@ const plans = [
     limitations: [],
     cta: 'Start Free Trial',
     popular: true,
-    icon: BarChart3
+    icon: BarChart3,
+    packageId: {
+      monthly: 'standard_monthly',
+      annual: 'standard_annual'
+    }
   },
   {
     name: 'Premium',
@@ -89,7 +97,11 @@ const plans = [
     limitations: [],
     cta: 'Start Free Trial',
     popular: false,
-    icon: Crown
+    icon: Crown,
+    packageId: {
+      monthly: 'premium_monthly',
+      annual: 'premium_annual'
+    }
   }
 ];
 
@@ -122,6 +134,15 @@ const faqs = [
 
 export default function PricingPage() {
   const [isAnnual, setIsAnnual] = useState(false);
+  const { user } = useAuth();
+  const router = useRouter();
+  const { 
+    purchasePackage, 
+    getPackageByIdentifier, 
+    isLoading, 
+    subscriptionPlan,
+    hasActiveSubscription 
+  } = useRevenueCat();
 
   const getPrice = (plan: any) => {
     if (plan.name === 'Free') return 0;
@@ -138,6 +159,57 @@ export default function PricingPage() {
     const monthlyCost = plan.priceMonthly * 12;
     const savings = Math.round(((monthlyCost - plan.priceAnnual) / monthlyCost) * 100);
     return savings;
+  };
+
+  const handlePurchase = async (plan: any) => {
+    if (!user) {
+      router.push('/signup');
+      return;
+    }
+
+    if (!plan.packageId) return;
+
+    try {
+      const packageIdentifier = isAnnual ? plan.packageId.annual : plan.packageId.monthly;
+      const packageToPurchase = getPackageByIdentifier(packageIdentifier);
+      
+      if (!packageToPurchase) {
+        console.error('Package not found:', packageIdentifier);
+        return;
+      }
+
+      await purchasePackage(packageToPurchase);
+    } catch (error) {
+      console.error('Purchase failed:', error);
+    }
+  };
+
+  const getCurrentPlanStatus = (plan: any) => {
+    if (!user || !hasActiveSubscription) return false;
+    
+    const planName = plan.name.toLowerCase();
+    return subscriptionPlan === planName;
+  };
+
+  const getCurrentPlanButtonText = (plan: any) => {
+    if (!user) return plan.cta;
+    
+    if (getCurrentPlanStatus(plan)) {
+      return 'Current Plan';
+    }
+    
+    if (hasActiveSubscription) {
+      const currentPlanIndex = plans.findIndex(p => p.name.toLowerCase() === subscriptionPlan);
+      const targetPlanIndex = plans.findIndex(p => p.name === plan.name);
+      
+      if (targetPlanIndex > currentPlanIndex) {
+        return 'Upgrade';
+      } else if (targetPlanIndex < currentPlanIndex) {
+        return 'Downgrade';
+      }
+    }
+    
+    return plan.cta;
   };
 
   return (
@@ -230,7 +302,17 @@ export default function PricingPage() {
                       ))}
                     </div>
                     
-                    <Link href={plan.name === 'Free' ? '/signup' : '/signup'}>
+                    {plan.name === 'Free' ? (
+                      <Link href="/signup">
+                        <Button 
+                          className="w-full"
+                          variant="outline"
+                        >
+                          {plan.cta}
+                          <ArrowRight className="w-4 h-4 ml-2" />
+                        </Button>
+                      </Link>
+                    ) : (
                       <Button 
                         className={`w-full ${
                           plan.popular 
@@ -238,11 +320,13 @@ export default function PricingPage() {
                             : ''
                         }`}
                         variant={plan.popular ? 'default' : 'outline'}
+                        onClick={() => handlePurchase(plan)}
+                        disabled={isLoading || (user && getCurrentPlanStatus(plan)) || false}
                       >
-                        {plan.cta}
-                        <ArrowRight className="w-4 h-4 ml-2" />
+                        {getCurrentPlanButtonText(plan)}
+                        {!getCurrentPlanStatus(plan) && <ArrowRight className="w-4 h-4 ml-2" />}
                       </Button>
-                    </Link>
+                    )}
                   </CardContent>
                 </Card>
               );

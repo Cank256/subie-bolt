@@ -44,6 +44,7 @@
     "@radix-ui/react-toggle": "^1.0.3",
     "@radix-ui/react-toggle-group": "^1.0.4",
     "@radix-ui/react-tooltip": "^1.0.7",
+    "@revenuecat/purchases-js": "^1.7.0",
     "@supabase/supabase-js": "^2.39.3",
     "bcryptjs": "^3.0.2",
     "class-variance-authority": "^0.7.0",
