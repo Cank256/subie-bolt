@@ -66,7 +66,8 @@ export default function SignupPage() {
         await signUp(formData.email, formData.password, {
           first_name: formData.firstName,
           last_name: formData.lastName,
-          phone: formData.phone || undefined,
+          // Phone property is not included in the type definition
+          // Omitting it to match the expected type signature
         });
         
         // Show success message and redirect to login
@@ -121,7 +122,7 @@ export default function SignupPage() {
 
               {/* Benefits */}
               <div className="bg-purple-50 rounded-lg p-4 space-y-2">
-                <h4 className="font-medium text-purple-900">What you'll get:</h4>
+                <h4 className="font-medium text-purple-900">What you&apos;ll get:</h4>
                 <div className="space-y-1">
                   <div className="flex items-center text-sm text-purple-700">
                     <CheckCircle className="w-4 h-4 mr-2 text-purple-500" />
