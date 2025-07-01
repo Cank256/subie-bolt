@@ -1,3 +1,5 @@
+'use client'
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,8 +9,52 @@ import { Navbar } from '@/components/ui/navbar';
 import { Footer } from '@/components/ui/footer';
 import { PhoneInput } from '@/components/ui/phone-input';
 import { Mail, Phone, MapPin, Clock, MessageCircle, HeadphonesIcon } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase/client';
+
+interface GeneralSettings {
+  app_name: string
+  app_description: string
+  support_email: string
+  phone_contact: string
+  company_name: string
+  company_address: string
+}
 
 export default function ContactPage() {
+  const [settings, setSettings] = useState<GeneralSettings>({
+    app_name: 'Subie',
+    app_description: 'Take control of your subscriptions with intelligent tracking, smart reminders, and powerful analytics.',
+    support_email: 'support@subie.com',
+    phone_contact: '+1 (555) 123-SUBI',
+    company_name: 'Subie Inc.',
+    company_address: '123 Tech Street, San Francisco, CA 94105'
+  })
+  
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const { data, error } = await supabase.rpc('get_app_settings')
+        if (error) throw error
+        
+        if (data && data.length > 0) {
+          const settingsMap = data.reduce((acc: any, item: any) => {
+            acc[item.setting_key] = item.setting_value
+            return acc
+          }, {})
+          
+          if (settingsMap.general) {
+            setSettings(settingsMap.general)
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching settings:', error)
+      }
+    }
+    
+    fetchSettings()
+  }, [])
+  
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -35,8 +81,8 @@ export default function ContactPage() {
                     <Mail className="w-5 h-5 text-purple-600 mt-1" />
                     <div>
                       <h4 className="font-medium">Email Us</h4>
-                      <p className="text-sm text-gray-600">support@subie.com</p>
-                      <p className="text-sm text-gray-600">We'll respond within 24 hours</p>
+                      <p className="text-sm text-gray-600">{settings.support_email}</p>
+                      <p className="text-sm text-gray-600">We&apos;ll respond within 24 hours</p>
                     </div>
                   </div>
 
@@ -44,7 +90,7 @@ export default function ContactPage() {
                     <Phone className="w-5 h-5 text-purple-600 mt-1" />
                     <div>
                       <h4 className="font-medium">Call Us</h4>
-                      <p className="text-sm text-gray-600">+1 (555) 123-SUBI</p>
+                      <p className="text-sm text-gray-600">{settings.phone_contact}</p>
                       <p className="text-sm text-gray-600">Mon-Fri, 9AM-6PM EST</p>
                     </div>
                   </div>
@@ -65,8 +111,13 @@ export default function ContactPage() {
                     <div>
                       <h4 className="font-medium">Office</h4>
                       <p className="text-sm text-gray-600">
-                        123 Tech Street<br />
-                        San Francisco, CA 94105<br />
+                        {settings.company_address.split(',').map((line, index) => (
+                          <span key={index}>
+                            {line.trim()}
+                            {index < settings.company_address.split(',').length - 1 && <br />}
+                          </span>
+                        ))}
+                        <br />
                         United States
                       </p>
                     </div>
@@ -109,7 +160,7 @@ export default function ContactPage() {
                 <CardHeader>
                   <CardTitle>Send us a Message</CardTitle>
                   <p className="text-gray-600">
-                    Fill out the form below and we'll get back to you as soon as possible.
+                    Fill out the form below and we&apos;ll get back to you as soon as possible.
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -174,7 +225,7 @@ export default function ContactPage() {
                     <div>
                       <h4 className="font-medium mb-2">How do I add a subscription?</h4>
                       <p className="text-sm text-gray-600">
-                        Click the "Add Subscription" button on your dashboard and enter the service details, including name, cost, and billing frequency.
+                        Click the &quot;Add Subscription&quot; button on your dashboard and enter the service details, including name, cost, and billing frequency.
                       </p>
                     </div>
                     

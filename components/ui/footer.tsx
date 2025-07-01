@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link';
 import { 
   Facebook, 
@@ -8,8 +10,52 @@ import {
   MapPin,
   Phone
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase/client';
+
+interface GeneralSettings {
+  app_name: string
+  app_description: string
+  support_email: string
+  phone_contact: string
+  company_name: string
+  company_address: string
+}
 
 export function Footer() {
+  const [settings, setSettings] = useState<GeneralSettings>({
+    app_name: 'Subie',
+    app_description: 'Take control of your subscriptions with intelligent tracking, smart reminders, and powerful analytics.',
+    support_email: 'support@subie.com',
+    phone_contact: '+1 (555) 123-SUBI',
+    company_name: 'Subie Inc.',
+    company_address: '123 Tech Street, San Francisco, CA 94105'
+  })
+  
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const { data, error } = await supabase.rpc('get_app_settings')
+        if (error) throw error
+        
+        if (data && data.length > 0) {
+          const settingsMap = data.reduce((acc: any, item: any) => {
+            acc[item.setting_key] = item.setting_value
+            return acc
+          }, {})
+          
+          if (settingsMap.general) {
+            setSettings(settingsMap.general)
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching settings:', error)
+      }
+    }
+    
+    fetchSettings()
+  }, [])
+  
   return (
     <footer className="bg-gray-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -17,10 +63,10 @@ export function Footer() {
           {/* Company Info */}
           <div className="space-y-4">
             <h3 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-              Subie
+              {settings.app_name}
             </h3>
             <p className="text-gray-300 text-sm">
-              Take control of your subscriptions with intelligent tracking, smart reminders, and powerful analytics.
+              {settings.app_description}
             </p>
             <div className="flex space-x-4">
               <a href="#" className="text-gray-400 hover:text-white transition-colors">
@@ -98,17 +144,21 @@ export function Footer() {
             <div className="space-y-3 text-sm">
               <div className="flex items-center space-x-2">
                 <Mail className="w-4 h-4 text-gray-400" />
-                <span className="text-gray-300">support@subie.com</span>
+                <span className="text-gray-300">{settings.support_email}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Phone className="w-4 h-4 text-gray-400" />
-                <span className="text-gray-300">+1 (555) 123-SUBI</span>
+                <span className="text-gray-300">{settings.phone_contact}</span>
               </div>
               <div className="flex items-start space-x-2">
                 <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
                 <span className="text-gray-300">
-                  123 Tech Street<br />
-                  San Francisco, CA 94105
+                  {settings.company_address.split(',').map((line, index) => (
+                    <span key={index}>
+                      {line.trim()}
+                      {index < settings.company_address.split(',').length - 1 && <br />}
+                    </span>
+                  ))}
                 </span>
               </div>
             </div>

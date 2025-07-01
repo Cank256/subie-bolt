@@ -41,6 +41,7 @@ interface AppSettings {
     app_description: string
     app_url: string
     support_email: string
+    phone_contact: string
     company_name: string
     company_address: string
     timezone: string
@@ -74,8 +75,12 @@ interface AppSettings {
     analytics_tracking: boolean
   }
   billing: {
+    payment_provider: string
     stripe_publishable_key: string
     stripe_secret_key: string
+    flutterwave_public_key: string
+    flutterwave_secret_key: string
+    revenuecat_api_key: string
     webhook_endpoint: string
     tax_rate: number
     currency: string
@@ -105,8 +110,9 @@ export default function AdminSettingsPage() {
       app_description: 'Subscription management platform',
       app_url: 'https://subie.app',
       support_email: 'support@subie.app',
+      phone_contact: '+1 (555) 123-SUBI',
       company_name: 'Subie Inc.',
-      company_address: '123 Main St, San Francisco, CA 94105',
+      company_address: '123 Tech Street, San Francisco, CA 94105',
       timezone: 'America/New_York',
       language: 'en',
       currency: 'USD'
@@ -138,8 +144,12 @@ export default function AdminSettingsPage() {
       analytics_tracking: true
     },
     billing: {
+      payment_provider: 'RevenueCat',
       stripe_publishable_key: '',
       stripe_secret_key: '',
+      flutterwave_public_key: '',
+      flutterwave_secret_key: '',
+      revenuecat_api_key: '',
       webhook_endpoint: '',
       tax_rate: 0.08,
       currency: 'USD',
@@ -172,8 +182,24 @@ export default function AdminSettingsPage() {
 
   const fetchSettings = async () => {
     try {
-      // In a real app, fetch settings from your backend
-      // For now, we'll use the default settings
+      const { data, error } = await supabase.rpc('get_app_settings')
+      if (error) throw error
+      
+      if (data && data.length > 0) {
+        const settingsMap = data.reduce((acc: any, item: any) => {
+          acc[item.setting_key] = item.setting_value
+          return acc
+        }, {})
+        
+        setSettings({
+          general: settingsMap.general || settings.general,
+          email: settingsMap.email || settings.email,
+          notifications: settingsMap.notifications || settings.notifications,
+          features: settingsMap.features || settings.features,
+          billing: settingsMap.billing || settings.billing,
+          maintenance: settingsMap.maintenance || settings.maintenance
+        })
+      }
     } catch (error) {
       console.error('Error fetching settings:', error)
     }
@@ -193,8 +219,23 @@ export default function AdminSettingsPage() {
       setSaveStatus('saving')
       setLoading(true)
       
-      // In a real app, you would save settings to your backend
-      await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate API call
+      // Save each settings category
+      const settingsToSave = [
+        { key: 'general', value: settings.general },
+        { key: 'email', value: settings.email },
+        { key: 'notifications', value: settings.notifications },
+        { key: 'features', value: settings.features },
+        { key: 'billing', value: settings.billing },
+        { key: 'maintenance', value: settings.maintenance }
+      ]
+      
+      for (const setting of settingsToSave) {
+        const { error } = await supabase.rpc('update_app_setting', {
+          key: setting.key,
+          value: setting.value
+        })
+        if (error) throw error
+      }
       
       setSaveStatus('saved')
       setTimeout(() => setSaveStatus('idle'), 3000)
@@ -412,6 +453,19 @@ export default function AdminSettingsPage() {
                       />
                     </div>
                     
+                    <div>
+                      <Label htmlFor="phone_contact">Phone Contact</Label>
+                      <Input
+                        id="phone_contact"
+                        type="tel"
+                        value={settings.general.phone_contact}
+                        onChange={(e) => updateGeneralSettings('phone_contact', e.target.value)}
+                        placeholder="+1 (555) 123-4567"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="company_name">Company Name</Label>
                       <Input
@@ -758,27 +812,83 @@ export default function AdminSettingsPage() {
                     </AlertDescription>
                   </Alert>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-4">
                     <div>
-                      <Label htmlFor="stripe_publishable_key">Stripe Publishable Key</Label>
-                      <Input
-                        id="stripe_publishable_key"
-                        value={settings.billing.stripe_publishable_key}
-                        onChange={(e) => updateBillingSettings('stripe_publishable_key', e.target.value)}
-                        placeholder="pk_..."
-                      />
+                      <Label htmlFor="payment_provider">Payment Provider</Label>
+                      <Select value={settings.billing.payment_provider} onValueChange={(value) => updateBillingSettings('payment_provider', value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select payment provider" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Stripe">Stripe</SelectItem>
+                          <SelectItem value="Flutterwave">Flutterwave</SelectItem>
+                          <SelectItem value="RevenueCat">RevenueCat</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     
-                    <div>
-                      <Label htmlFor="stripe_secret_key">Stripe Secret Key</Label>
-                      <Input
-                        id="stripe_secret_key"
-                        type="password"
-                        value={settings.billing.stripe_secret_key}
-                        onChange={(e) => updateBillingSettings('stripe_secret_key', e.target.value)}
-                        placeholder="sk_..."
-                      />
-                    </div>
+                    {settings.billing.payment_provider === 'Stripe' && (
+                      <>
+                        <div>
+                          <Label htmlFor="stripe_publishable_key">Stripe Publishable Key</Label>
+                          <Input
+                            id="stripe_publishable_key"
+                            value={settings.billing.stripe_publishable_key}
+                            onChange={(e) => updateBillingSettings('stripe_publishable_key', e.target.value)}
+                            placeholder="pk_test_..."
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="stripe_secret_key">Stripe Secret Key</Label>
+                          <Input
+                            id="stripe_secret_key"
+                            type="password"
+                            value={settings.billing.stripe_secret_key}
+                            onChange={(e) => updateBillingSettings('stripe_secret_key', e.target.value)}
+                            placeholder="sk_test_..."
+                          />
+                        </div>
+                      </>
+                    )}
+                    
+                    {settings.billing.payment_provider === 'Flutterwave' && (
+                      <>
+                        <div>
+                          <Label htmlFor="flutterwave_public_key">Flutterwave Public Key</Label>
+                          <Input
+                            id="flutterwave_public_key"
+                            value={settings.billing.flutterwave_public_key}
+                            onChange={(e) => updateBillingSettings('flutterwave_public_key', e.target.value)}
+                            placeholder="FLWPUBK_TEST-..."
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="flutterwave_secret_key">Flutterwave Secret Key</Label>
+                          <Input
+                            id="flutterwave_secret_key"
+                            type="password"
+                            value={settings.billing.flutterwave_secret_key}
+                            onChange={(e) => updateBillingSettings('flutterwave_secret_key', e.target.value)}
+                            placeholder="FLWSECK_TEST-..."
+                          />
+                        </div>
+                      </>
+                    )}
+                    
+                    {settings.billing.payment_provider === 'RevenueCat' && (
+                      <div>
+                        <Label htmlFor="revenuecat_api_key">RevenueCat API Key</Label>
+                        <Input
+                          id="revenuecat_api_key"
+                          type="password"
+                          value={settings.billing.revenuecat_api_key}
+                          onChange={(e) => updateBillingSettings('revenuecat_api_key', e.target.value)}
+                          placeholder="sk_..."
+                        />
+                      </div>
+                    )}
                   </div>
                   
                   <div>
