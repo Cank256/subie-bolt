@@ -1,10 +1,30 @@
 # App Settings Setup Guide
 
-Since the automated database setup scripts are encountering issues with the Supabase environment, please follow these manual steps to set up the `app_settings` table:
+This guide will help you set up the `app_settings` table and related functions in your Supabase database.
 
-## Step 1: Create the Table
+## Prerequisites
 
-Go to your Supabase dashboard → SQL Editor and run this SQL:
+- Access to your Supabase dashboard
+- Admin privileges in your Supabase project
+
+## Quick Setup (Recommended)
+
+**Option 1: Use the Complete SQL File**
+
+1. Open your Supabase dashboard
+2. Go to the SQL Editor
+3. Copy and paste the entire contents of `supabase-setup-complete.sql` file
+4. Click "Run" to execute all commands at once
+
+This will create the table, enable RLS, create policies, insert default data, and create the required functions.
+
+## Manual Setup (Alternative)
+
+If you prefer to run commands step by step, follow these instructions:
+
+### Step 1: Create the App Settings Table
+
+Run the following SQL commands in your Supabase SQL Editor:
 
 ```sql
 -- Create the app_settings table
@@ -158,6 +178,38 @@ SELECT * FROM get_app_settings();
 -- Check all settings
 SELECT setting_key, setting_value FROM app_settings;
 ```
+
+## Verification
+
+After completing the setup, verify everything works:
+
+1. Check that the table exists:
+```sql
+SELECT * FROM app_settings;
+```
+
+2. Test the functions:
+```sql
+SELECT * FROM get_app_settings();
+```
+
+3. Test updating a setting:
+```sql
+SELECT update_app_setting('general', '{"app_name": "My Custom App"}'::jsonb);
+```
+
+## Files Included
+
+- `supabase-setup-complete.sql` - Complete setup script (recommended)
+- `SETUP_APP_SETTINGS.md` - This manual guide
+- Various migration scripts in the `scripts/` folder (for reference)
+
+## Troubleshooting
+
+- If you get permission errors, make sure you're running the SQL as a database admin
+- If RLS policies aren't working, ensure your user has the 'admin' role in their metadata
+- The functions use `SECURITY DEFINER` to bypass RLS for administrative operations
+- If you still get `PGRST202` errors, ensure the functions were created successfully by checking the Functions tab in your Supabase dashboard
 
 ## Step 5: Create Admin User
 
