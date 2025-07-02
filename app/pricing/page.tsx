@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import dynamic from 'next/dynamic';
-import { useRevenueCat } from '@/hooks/use-revenuecat';
+import { useFlutterwave } from '@/hooks/use-flutterwave';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 
@@ -137,12 +137,11 @@ export default function PricingPage() {
   const { user } = useAuth();
   const router = useRouter();
   const { 
-    purchasePackage, 
-    getPackageByIdentifier, 
+    processPayment, 
     isLoading, 
     subscriptionPlan,
     hasActiveSubscription 
-  } = useRevenueCat();
+  } = useFlutterwave();
 
   const getPrice = (plan: any) => {
     if (plan.name === 'Free') return 0;
@@ -170,15 +169,10 @@ export default function PricingPage() {
     if (!plan.packageId) return;
 
     try {
-      const packageIdentifier = isAnnual ? plan.packageId.annual : plan.packageId.monthly;
-      const packageToPurchase = getPackageByIdentifier(packageIdentifier);
+      const planType = plan.name.toLowerCase() as 'standard' | 'premium';
+      const billingCycle = isAnnual ? 'annual' : 'monthly';
       
-      if (!packageToPurchase) {
-        console.error('Package not found:', packageIdentifier);
-        return;
-      }
-
-      await purchasePackage(packageToPurchase);
+      await processPayment(planType, billingCycle);
     } catch (error) {
       console.error('Purchase failed:', error);
     }

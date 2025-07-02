@@ -76,7 +76,7 @@ async function createAppSettings() {
           "currency": "USD"
         }'),
         ('billing', '{
-          "payment_provider": "RevenueCat",
+          "payment_provider": "Flutterwave",
           "stripe_publishable_key": "",
           "stripe_secret_key": "",
           "flutterwave_public_key": "",

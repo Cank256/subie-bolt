@@ -62,8 +62,9 @@ export function RevenueCatProvider({ children }: RevenueCatProviderProps) {
         
         // Check if RevenueCat API key is available
         const apiKey = process.env.NEXT_PUBLIC_REVENUECAT_API_KEY;
-        if (!apiKey) {
-          console.warn('RevenueCat API key not found. Subscription features will be disabled.');
+        if (!apiKey || apiKey === 'your_revenuecat_public_api_key') {
+          console.warn('RevenueCat API key not found or not configured. Subscription features will be disabled.');
+          setError('RevenueCat API key not configured. Please set NEXT_PUBLIC_REVENUECAT_API_KEY in your environment variables.');
           setIsLoading(false);
           return;
         }

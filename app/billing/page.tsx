@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { useRevenueCat } from '@/hooks/use-revenuecat';
+import { useFlutterwave } from '@/hooks/use-flutterwave';
 import { useAuth } from '@/hooks/use-auth';
 import Link from 'next/link';
 import {
@@ -83,25 +83,24 @@ const mockPaymentMethods = [
 export default function BillingPage() {
   const { user } = useAuth();
   const {
-    customerInfo,
     isLoading,
     error,
     hasActiveSubscription,
     subscriptionPlan,
-    restorePurchases,
-    getCustomerInfo,
-  } = useRevenueCat();
+    expiresAt,
+    refreshSubscriptionStatus,
+  } = useFlutterwave();
   
   const [isRestoring, setIsRestoring] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Handle restore purchases
+  // Handle restore purchases (not applicable for Flutterwave)
   const handleRestorePurchases = async () => {
     setIsRestoring(true);
     try {
-      await restorePurchases();
+      await refreshSubscriptionStatus();
     } catch (error) {
-      console.error('Failed to restore purchases:', error);
+      console.error('Failed to refresh subscription:', error);
     } finally {
       setIsRestoring(false);
     }
@@ -111,7 +110,7 @@ export default function BillingPage() {
   const handleRefreshSubscription = async () => {
     setIsRefreshing(true);
     try {
-      await getCustomerInfo();
+      await refreshSubscriptionStatus();
     } catch (error) {
       console.error('Failed to refresh subscription:', error);
     } finally {
@@ -135,19 +134,8 @@ export default function BillingPage() {
 
   // Get next billing date
   const getNextBillingDate = () => {
-    if (!customerInfo || !hasActiveSubscription) return null;
-    
-    // Get the latest expiration date from active entitlements
-    const activeEntitlements = Object.values(customerInfo.entitlements.active);
-    if (activeEntitlements.length === 0) return null;
-    
-    const latestExpiration = activeEntitlements.reduce((latest, entitlement) => {
-      if (!entitlement.expirationDate) return latest;
-      const expirationDate = new Date(entitlement.expirationDate);
-      return expirationDate > latest ? expirationDate : latest;
-    }, new Date(0));
-    
-    return latestExpiration.toLocaleDateString();
+    if (!hasActiveSubscription || !expiresAt) return null;
+    return new Date(expiresAt).toLocaleDateString();
   };
 
   // Calculate stats from mock data
@@ -200,7 +188,7 @@ export default function BillingPage() {
                     onClick={handleRestorePurchases}
                     disabled={isLoading}
                   >
-                    Restore Purchases
+                    Refresh Status
                   </Button>
                 </div>
               </div>

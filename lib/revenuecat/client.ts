@@ -23,9 +23,9 @@ class RevenueCatService {
     if (this.isInitialized) return;
 
     const apiKey = process.env.NEXT_PUBLIC_REVENUECAT_API_KEY;
-    if (!apiKey) {
-      console.warn('RevenueCat API key not found. Please set NEXT_PUBLIC_REVENUECAT_API_KEY in your environment variables.');
-      return;
+    if (!apiKey || apiKey === 'your_revenuecat_public_api_key') {
+      console.warn('RevenueCat API key not found or not configured. Please set NEXT_PUBLIC_REVENUECAT_API_KEY in your environment variables.');
+      throw new Error('RevenueCat API key not configured. Please set a valid NEXT_PUBLIC_REVENUECAT_API_KEY in your environment variables.');
     }
 
     try {

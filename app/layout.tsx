@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google';
 import { ClientProvider } from '@/components/providers/client-provider';
 import { AuthProvider } from '@/components/providers/auth-provider';
 import { RevenueCatProvider } from '@/components/providers/revenuecat-provider';
+import { FlutterwaveProvider } from '@/components/providers/flutterwave-provider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -23,7 +24,9 @@ export default function RootLayout({
         <ClientProvider>
           <AuthProvider>
             <RevenueCatProvider>
-              {children}
+              <FlutterwaveProvider>
+                {children}
+              </FlutterwaveProvider>
             </RevenueCatProvider>
           </AuthProvider>
         </ClientProvider>

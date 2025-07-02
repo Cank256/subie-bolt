@@ -74,7 +74,7 @@ INSERT INTO app_settings (setting_key, setting_value) VALUES
 }'::jsonb),
 
 ('billing', '{
-  "payment_provider": "RevenueCat",
+  "payment_provider": "Flutterwave",
   "stripe_publishable_key": "",
   "stripe_secret_key": "",
   "flutterwave_public_key": "",

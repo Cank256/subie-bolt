@@ -75,7 +75,7 @@ CREATE POLICY "Admin users can manage app settings" ON app_settings
       {
         setting_key: 'billing',
         setting_value: {
-          payment_provider: 'RevenueCat',
+          payment_provider: 'Flutterwave',
           stripe_publishable_key: '',
           stripe_secret_key: '',
           flutterwave_public_key: '',
