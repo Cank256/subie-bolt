@@ -181,9 +181,16 @@ export function Footer() {
                 Sitemap
               </Link>
             </div>
-            <p className="text-sm text-gray-400">
-              © 2025 Subie. All rights reserved.
-            </p>
+            <div className="flex items-center space-x-4">
+              <p className="text-sm text-gray-400">
+                © 2025 Subie. All rights reserved.
+              </p>
+              <img 
+                src="/logotext_poweredby_360w.png" 
+                alt="Powered by" 
+                className="h-10 opacity-70 hover:opacity-100 transition-opacity"
+              />
+            </div>
           </div>
         </div>
       </div>
