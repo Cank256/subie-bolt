@@ -94,7 +94,7 @@ class FlutterwaveService {
       public_key: this.publicKey,
     };
 
-    window.FlutterwaveCheckout(paymentConfig);
+    window.FlutterwaveCheckout?.(paymentConfig);
   }
 
   private loadFlutterwaveScript(): Promise<void> {
@@ -165,7 +165,17 @@ class FlutterwaveService {
       },
       callback: async (response: FlutterwaveResponse) => {
         if (response.status === 'successful') {
-          await this.handleSuccessfulPayment(response, planType, billingCycle);
+          // Get current user for handling payment
+          const user = await auth.getUser();
+          if (user) {
+            await this.handleSuccessfulPayment(
+              user.id,
+              planType,
+              billingCycle,
+              response.transaction_id,
+              selectedPlan.amount
+            );
+          }
         } else {
           console.error('Payment failed:', response);
         }
@@ -305,7 +315,7 @@ class FlutterwaveService {
 
       const now = new Date();
       const expiresAt = user.subscription_expires_at ? new Date(user.subscription_expires_at) : null;
-      const isActive = user.subscription_status === 'active' && expiresAt && expiresAt > now;
+      const isActive = user.subscription_status === 'active' && expiresAt !== null && expiresAt > now;
 
       return {
         hasActiveSubscription: isActive,
@@ -326,7 +336,7 @@ class FlutterwaveService {
 // Extend Window interface for Flutterwave
 declare global {
   interface Window {
-    FlutterwaveCheckout: (config: FlutterwaveConfig) => void;
+    FlutterwaveCheckout?: (config: FlutterwaveConfig) => void;
   }
 }
 
